@@ -3,6 +3,7 @@
 namespace MauticPlugin\ZenderWhatsappBundle\Controller;
 
 use Mautic\CoreBundle\Controller\FormController;
+use Mautic\SmsBundle\Entity\Stat;
 use MauticPlugin\ZenderWhatsappBundle\Form\Type\SendWhatsappType;
 use MauticPlugin\ZenderWhatsappBundle\Transport\ZenderWhatsappTransport;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -122,11 +123,38 @@ class WhatsappController extends FormController
                 'document' === $messageType ? $documentType : null,
             );
 
+            // Create stat entry for activity tracking
+            /** @var \Mautic\SmsBundle\Model\SmsModel $smsModel */
+            $smsModel = $this->getModel('sms');
+
+            $stat = new Stat();
+            $stat->setDateSent(new \DateTime());
+            $stat->setLead($lead);
+            $stat->setTrackingHash(str_replace('.', '', uniqid('', true)));
+            $stat->setSource('api');
+
+            $details = ['message' => $message, 'type' => $messageType, 'channel' => 'whatsapp'];
+            if ('media' === $messageType) {
+                $details['media_url'] = $mediaUrl;
+                $details['media_type'] = $mediaType;
+            }
+            if ('document' === $messageType) {
+                $details['document_url'] = $documentUrl;
+                $details['document_name'] = $documentName;
+                $details['document_type'] = $documentType;
+            }
+
             if (true === $result) {
+                $stat->setDetails($details);
                 $this->addFlashMessage('zender_wa.send.success');
             } else {
+                $stat->setIsFailed(true);
+                $details['error'] = $result;
+                $stat->setDetails($details);
                 $this->addFlashMessage('zender_wa.send.error.failed_detail', ['%error%' => $result], 'error');
             }
+
+            $smsModel->getStatRepository()->saveEntity($stat);
 
             return new JsonResponse(['closeModal' => true, 'flashes' => $this->getFlashContent()]);
         }
