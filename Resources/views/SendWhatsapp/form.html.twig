@@ -1,0 +1,35 @@
+<div class="modal-body">
+    <div class="alert alert-info">
+        {{ 'zender_wa.send.description'|trans({'%contact%': contact.getName()}) }}
+    </div>
+
+    {{ form_start(form) }}
+    {{ form_row(form.messageType) }}
+    {{ form_row(form.message) }}
+
+    <div id="zender-wa-media-fields" style="display:none;">
+        {{ form_row(form.mediaUrl) }}
+        {{ form_row(form.mediaType) }}
+    </div>
+
+    <div id="zender-wa-document-fields" style="display:none;">
+        {{ form_row(form.documentUrl) }}
+        {{ form_row(form.documentName) }}
+        {{ form_row(form.documentType) }}
+    </div>
+
+    {{ form_row(form.contactId) }}
+    {{ form_row(form.buttons) }}
+    {{ form_end(form) }}
+</div>
+
+<script>
+var ZenderWhatsapp = {
+    toggleFields: function(type) {
+        var mediaFields = document.getElementById('zender-wa-media-fields');
+        var docFields = document.getElementById('zender-wa-document-fields');
+        mediaFields.style.display = (type === 'media') ? 'block' : 'none';
+        docFields.style.display = (type === 'document') ? 'block' : 'none';
+    }
+};
+</script>

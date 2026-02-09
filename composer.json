@@ -1,0 +1,23 @@
+{
+    "name": "radata/mautic-zender-whatsapp",
+    "description": "Mautic WhatsApp transport plugin for the Zender API",
+    "type": "mautic-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Radata"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "mautic/core-lib": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MauticPlugin\\ZenderWhatsappBundle\\": ""
+        }
+    },
+    "extra": {
+        "install-directory-name": "ZenderWhatsappBundle"
+    }
+}
