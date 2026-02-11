@@ -13,6 +13,13 @@ return [
                 'controller' => 'MauticPlugin\ZenderWhatsappBundle\Controller\WhatsappController::executeAction',
             ],
         ],
+        'api' => [
+            'plugin_zenderwhatsapp_api_send' => [
+                'path'       => '/whatsapp/{smsId}/contact/{contactId}/send',
+                'controller' => 'MauticPlugin\ZenderWhatsappBundle\Controller\Api\WhatsappApiController::sendToContactAction',
+                'method'     => 'GET',
+            ],
+        ],
     ],
 
     'services' => [
