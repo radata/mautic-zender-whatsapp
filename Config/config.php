@@ -19,6 +19,11 @@ return [
                 'controller' => 'MauticPlugin\ZenderWhatsappBundle\Controller\Api\WhatsappApiController::sendToContactAction',
                 'method'     => 'GET',
             ],
+            'plugin_zenderwhatsapp_api_inbound' => [
+                'path'       => '/whatsapp/inbound',
+                'controller' => 'MauticPlugin\ZenderWhatsappBundle\Controller\Api\InboundApiController::receiveAction',
+                'method'     => 'POST',
+            ],
         ],
     ],
 
