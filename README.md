@@ -4,18 +4,20 @@ Mautic WhatsApp transport plugin for sending WhatsApp messages via the [Zender](
 
 ## Features
 
+- SMS transport compatible (text-only) for campaigns and broadcast messages
 - Send WhatsApp messages through Zender API
+- "Send WhatsApp" button on contact pages with modal dialog
 - Support for text, media, and document message types
 - Media attachments: images, audio, video via URL
 - Document attachments: PDF, XML, XLS, XLSX, DOC, DOCX via URL
-- "Send WhatsApp" button on contact page with full attachment support
+- Basic token replacement (`{contactfield=firstname}`, etc.)
 - Configurable send priority (immediate or queued)
 - E.164 phone number normalization
 - Full logging of send results
 
 ## Requirements
 
-- Mautic 7.x
+- Mautic 7.x (Docker FPM image)
 - PHP 8.0+
 - A Zender account with API access and a linked WhatsApp account
 
@@ -23,7 +25,7 @@ Mautic WhatsApp transport plugin for sending WhatsApp messages via the [Zender](
 
 ### Via Composer (Docker)
 
-Ensure the composer directories exist with correct permissions:
+Ensure the composer and npm directories exist with correct permissions:
 
 ```bash
 docker exec --user root mautic_web mkdir -p /var/www/.composer/cache
@@ -48,14 +50,18 @@ docker exec --user www-data --workdir /var/www/html mautic_web \
   composer config repositories.mautic-zender-whatsapp vcs \
   https://github.com/radata/mautic-zender-whatsapp --no-interaction
 docker exec --user www-data --workdir /var/www/html mautic_web \
-  composer require radata/mautic-zender-whatsapp:dev-main -W --no-interaction
+  composer require radata/mautic-zender-whatsapp:dev-main \
+  -W --no-interaction --ignore-platform-req=ext-gd
 ```
+
+> The `--ignore-platform-req=ext-gd` flag is needed because the `mautic/mautic:7.0-fpm` Docker image has a broken GD CLI extension (`libavif.so.15` missing). GD works fine at runtime via PHP-FPM.
 
 Update to the latest version:
 
 ```bash
 docker exec --user www-data --workdir /var/www/html mautic_web \
-  composer update radata/mautic-zender-whatsapp -W --no-interaction
+  composer update radata/mautic-zender-whatsapp \
+  -W --no-interaction --ignore-platform-req=ext-gd
 ```
 
 If the npm post-install hook fails after composer require, fix it:
@@ -95,9 +101,15 @@ In the plugin settings:
 | **Priority** | High (send immediately) or Normal (queued) |
 | **API URL** | Zender API endpoint (default: `https://zender.hollandworx.nl`) |
 
-## Send WhatsApp Modal
+## Usage
 
-From a contact page, click **Send WhatsApp** to open a modal that supports:
+### Campaign / Broadcast Messages
+
+When selected as the SMS transport, campaigns and broadcasts send text-only WhatsApp messages via `sendSms()`.
+
+### Send WhatsApp from Contact Page
+
+When the plugin is enabled, a **Send WhatsApp** button appears on each contact's detail page. Clicking it opens a modal that supports:
 
 - **Text messages** - plain text with contact field tokens
 - **Media messages** - text + image/audio/video via URL
@@ -109,20 +121,24 @@ Contact field tokens like `{contactfield=firstname}` are replaced automatically.
 
 ```
 plugins/ZenderWhatsappBundle/
-├── Config/config.php                     # Service registration
-├── Controller/WhatsappController.php     # Send WhatsApp modal handler
-├── EventListener/ButtonSubscriber.php    # Injects "Send WhatsApp" button
-├── Form/Type/SendWhatsappType.php        # Modal form with message type fields
+├── Config/config.php                        # Service & route registration
+├── Controller/
+│   └── WhatsappController.php               # "Send WhatsApp" modal controller
+├── EventListener/
+│   └── ButtonSubscriber.php                 # Injects "Send WhatsApp" button on contact page
+├── Form/Type/
+│   └── SendWhatsappType.php                 # Modal form with message type fields
 ├── Integration/
-│   └── ZenderWhatsappIntegration.php     # Settings UI (API key, account ID)
+│   └── ZenderWhatsappIntegration.php        # Settings UI (API key, account ID)
 ├── Resources/views/SendWhatsapp/
-│   └── form.html.twig                    # Modal template
+│   └── form.html.twig                       # Modal template
 ├── Transport/
-│   ├── Configuration.php                 # Reads credentials from integration
+│   ├── Configuration.php                    # Reads credentials from integration settings
 │   ├── ConfigurationException.php
-│   └── ZenderWhatsappTransport.php       # Sends via POST /api/send/whatsapp
+│   └── ZenderWhatsappTransport.php          # Sends via POST /api/send/whatsapp
 ├── Translations/en_US/messages.ini
-└── ZenderWhatsappBundle.php              # Bundle class
+├── ZenderWhatsappBundle.php                 # Bundle class
+└── composer.json
 ```
 
 ## Uninstall
